@@ -1,3 +1,9 @@
+/**
+ *
+ * @param {dateOfBirth:Date} // the date of birth of the user to calucate the age of the user.
+ * @returns age in number format
+ */
+
 const calculateAge = (dateOfBirth) => {
   const today = new Date();
   const dob = new Date(dateOfBirth);
