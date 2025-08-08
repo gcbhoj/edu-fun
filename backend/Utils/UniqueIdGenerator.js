@@ -1,6 +1,9 @@
 const generateUniqueId = (prop) => {
   const fixedProp = prop.toUpperCase(); // Capitalize the whole string
-  const dateComponent = new Date().toISOString().split[0]; // YYYY-MM-DD
+  const dateComponent = new Date()
+    .toISOString()
+    .split("T")[0]
+    .replace(/-/g, ""); // YYYYMMDD
   const timeComponent = new Date()
     .toTimeString()
     .split(" ")[0]
@@ -10,5 +13,4 @@ const generateUniqueId = (prop) => {
   return `${fixedProp}-${dateComponent}-${timeComponent}-${randomNumber}`;
 };
 
-
-module.exports = {generateUniqueId}
+module.exports = { generateUniqueId };

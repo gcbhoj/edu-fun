@@ -10,11 +10,23 @@ const userSchema = new mongoose.Schema(
       minLength: 3,
       maxLength: 200,
     },
+    dateOfBirth: {
+      type: Date,
+      required: true,
+    },
     password: {
       type: String,
       required: true,
       minLength: 3,
       maxLength: 1024,
+    },
+    age: {
+      type: Number,
+      required: true,
+    },
+    role: {
+      type: String,
+      default: "user",
     },
   },
   {
