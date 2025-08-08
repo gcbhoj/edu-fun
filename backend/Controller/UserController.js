@@ -2,8 +2,15 @@ const userModel = require("../models/UserModel");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
 const { calculateAge } = require("../Utils/AgeCalulator");
-
+const {
+  jwtToken,
+  hashedAccessToken,
+  accessToken,
+  accessTokenExpiry,
+  createToken,
+} = require("../Utils/TokenGenerator");
 const { generateUniqueId } = require("../Utils/UniqueIdGenerator");
+const sendEmail = require("../Services/Email");
 /**
  * The below block of code gets the user information from  front end validates and stores securely to the database.
  * @param {name:string} req.body  // name of the user being extracted from request's body
@@ -121,6 +128,63 @@ const registerUser = async (req, res) => {
 
 const forgotPassword = async (req, res) => {
   try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        status: "failure",
+        message: "Email Address Cannot be Empty",
+        details: "Enter Your Email Address",
+      });
+    }
+
+    const user = await userModel.findOne({ email: email });
+
+    if (!user) {
+      return res.status(404).json({
+        staus: "Not Found",
+        message: "User Not Found",
+        details: `The provided email address does not exist.\nPlease Enter a valid email address.`,
+      });
+    }
+
+    const { _id, name } = user;
+    const { hashedAccessToken, accessToken, accessTokenExpiry } = createToken(
+      _id,
+      "15min"
+    );
+    const resetUrl = `${req.protocol}://${req.get(
+      "host"
+    )}/api/users/resetPassword/${accessToken}`;
+
+    const message = `dear ${name};\n we have received a password reset request for this email address.please use the below link to reset your password\n\n${resetUrl}.\n\nthe above link will expire in 15 min.\nhave a wonderful day\nour app\nsupport team. `;
+
+    user.passwordResetToken = hashedAccessToken;
+    user.passwordResetTokenExpiry = accessTokenExpiry;
+    await user.save();
+
+    try {
+      await sendEmail({
+        email: user.email,
+        Subject: "Password Reset Request",
+        message: message,
+      });
+      return res.status(200).json({
+        status: "success",
+        message: "Email sent",
+        details:
+          "Email with Password Reset Link has been sent to your email address.",
+      });
+    } catch (error) {
+      user.passwordResetToken = undefined;
+      user.passwordResetTokenExpiry = undefined;
+      await user.save();
+      return res.status(500).json({
+        status: "error",
+        message: "Error Sending Email",
+        details: error.message,
+      });
+    }
   } catch (error) {
     return res.status(500).json({
       status: "error",
@@ -130,4 +194,4 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-module.exports = { registerUser };
+module.exports = { registerUser, forgotPassword };

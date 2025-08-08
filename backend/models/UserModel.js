@@ -28,6 +28,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "user",
     },
+    passwordResetToken: {
+      type: String,
+    },
+    passwordResetTokenExpiry: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
