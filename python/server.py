@@ -1,7 +1,12 @@
 from flask import Flask
+from Controllers.UserController import user_bp
+from Controllers.MathsController import maths_bp
 
 app = Flask(__name__)
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello World</P>"
+
+app.register_blueprint(user_bp)
+app.register_blueprint(maths_bp)
+
+if __name__ == "__main__":
+    app.run(debug=True)
