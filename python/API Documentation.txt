@@ -1,0 +1,7 @@
+***Use This API Documentaion to use the api routes for the following***
+
+1. API Name: Auto Update Age
+   API URL : http://127.0.0.1:5000/api/update-ages
+   API Description: 
+    - ***NOTE: This API is for Internal Use Only***
+    - This API will read the Date of Birth of all the users and updates their age if update is required
