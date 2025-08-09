@@ -11,3 +11,4 @@
 
 
 python -m Services.AgeUpdateServices -- runs services python file
+python -m Maths.Levels.SimpleAddition.Level1Addition
