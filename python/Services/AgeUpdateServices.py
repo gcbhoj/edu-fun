@@ -15,7 +15,7 @@ def updateAge ():
             if userAge is None or userAge != calculatedAge:
                 user_Collection.update_one(
                     {"_id": user["_id"]},  # filter to update specific user
-                    {"$set": {"age": calculatedAge}}
+                    {"$set": {"age": calculatedAge, "ageUpdatedon":datetime.now()}}
                 )
                 updated_Count +=1
 

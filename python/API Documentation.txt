@@ -4,4 +4,51 @@
    API URL : http://127.0.0.1:5000/api/update-ages
    API Description: 
     - ***NOTE: This API is for Internal Use Only***
-    - This API will read the Date of Birth of all the users and updates their age if update is required
+    - This API will read the Date of Birth of all the users and updates their age if update is required.
+Response Structure
+    Upon a successful request, the API will respond with:
+    Status Code: 200 OK
+    Content-Type: application/json
+Response Body:
+    message: string .
+    status: sucess,
+    details: string,
+Sample Response:
+    {
+    "details": "Age's Intact.\nNothing to Update.",
+    "message": "None Updated",
+    "status": "success"
+}
+
+2. API Name: Password Reset Token Cleaner
+    API URL:http://127.0.0.1:5000/api/clean-up
+    API Description:
+    -This endpoint is used to clean up expired pass tokens from the system. It performs a maintenance operation that removes any expired tokens and provides information about the remaining valid tokens.
+    - ***NOTE: This API is for Internal Use Only***
+    - This API will get all the users who have their password reset token and password expiry open.
+    - The API adds 24 hours to the passwordResetTokenExpiry field.
+    - Analysis with the current time, if the token is still valid, it does not do anythind to those tokens.
+    - tokens whose expiry date is beyond 24 hours are all removed from the user document.
+    - field will be added with with a time stamp as passwordRecoveryTokenDeletedOn
+    Response Structure
+        Upon a successful execution, the response will contain the following fields:
+        status: A string indicating the status of the operation.
+        message: A string that may contain additional information regarding the operation.
+        details: An object containing:
+        expired_tokens_removed: An integer indicating the number of expired tokens that were removed.
+        valid_tokens_remaining: An integer indicating the number of valid tokens that remain after the cleanup.
+    Sample Response:
+    {
+    "details": {
+        "expired_tokens_removed": 0,
+        "valid_tokens_remaining": 1
+    },
+    "message": "Password Reset Clean Up Completed",
+    "status": "success"
+}
+
+
+
+
+
+
