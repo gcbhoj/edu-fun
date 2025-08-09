@@ -194,4 +194,80 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-module.exports = { registerUser, forgotPassword };
+const loginUser = async (req, res) => {
+
+  try {
+    // Extracting email and password from request body
+    const { email, password } = req.body;
+
+    // Validating email and password
+    if (!email || !password) {
+      return res.status(400).json({
+        status: "failure",
+        message: "Email and/or password missing",
+        details: "Fill in all the details",
+      });
+    }
+
+    // Checking if the email format is valid
+    if (!validator.isEmail(email)) {
+      return res.status(400).json({
+        status: "failure",
+        message: "Email Format Not Valid.",
+        details: "Enter a Valid Email Address.",
+      });
+    }
+
+    // Finding the user by email
+    let user = await userModel.findOne({ email: email });
+
+    // If user does not exist, return an error
+    if (!user) {
+      return res.status(409).json({
+        status: "failure",
+        message: "User with the given email does not exists.",
+        details: `user dosent exists\ntry registering or review you email.`,
+      });
+    }
+
+    // Checking if the password is valid
+    const isPasswordValid = await bcrypt.compare(
+      password,
+      user.password
+    );
+
+    // If password is invalid, return an error
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        status: "failure",
+        message: "Invalid Password",
+        details: "The password you entered is incorrect.",
+      });
+    }
+
+    // If everything is valid, create a JWT token
+    const token = createToken(user._id, "30d");
+
+    // Updating the user's last login time
+    res.status(200).json({
+      status: "success",
+      message: "Login successful",
+      data: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role || "user",
+        token: token.jwtToken,
+      },
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      status: "failure",
+      message: "Unable to login User",
+      details: error.message,
+    });
+  }
+}
+
+module.exports = { registerUser, forgotPassword, loginUser };
