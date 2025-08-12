@@ -23,6 +23,10 @@ const sendEmail = require("../Services/Email");
  * - status code 500 - Server Error
  */
 
+const loginAttempts = {}; // { email: { count: 0, lockUntil: timestamp } }
+const MAX_ATTEMPTS = 5;
+const LOCK_TIME = 15 * 60 * 1000; // 15 minutes
+
 const registerUser = async (req, res) => {
   try {
     //parsing userdata from request
@@ -199,6 +203,7 @@ const loginUser = async (req, res) => {
   try {
     // Extracting email and password from request body
     const { email, password } = req.body;
+    const now = Date.now();
 
     // Validating email and password
     if (!email || !password) {
@@ -230,19 +235,59 @@ const loginUser = async (req, res) => {
       });
     }
 
+    console.log(loginAttempts);
+
+    // Checking if the user is active
+    if (user.lockOutTimeExpiry && user.lockOutTimeExpiry > now) {
+      return res.status(403).json({
+        status: "failure",
+        message: "Account is locked",
+        details: `Your account is locked until ${user.lockOutTimeExpiry}. Please try again later.`,
+      });
+    }
+
     // Checking if the password is valid
     const isPasswordValid = await bcrypt.compare(
       password,
       user.password
     );
 
-    // If password is invalid, return an error
+    // If password is invalid, handle login attempts
     if (!isPasswordValid) {
+
+      if (!loginAttempts[email]) loginAttempts[email] = { count: 0, lockUntil: null };
+      loginAttempts[email].count++;
+
+      if (loginAttempts[email].count >= MAX_ATTEMPTS) {
+        loginAttempts[email].lockUntil = now + LOCK_TIME;
+        loginAttempts[email].count = 0;
+
+        user.isActive = false; // Lock the user account
+        user.lockOutTimeExpiry = new Date(loginAttempts[email].lockUntil);
+        await user.save();
+
+        return res.status(403).json({
+          status: "faliure",
+          message: "Too many failed attempts. Locked for 15 mins.",
+          details: "You have exceeded the maximum number of login attempts. Please try again after 15 minutes."
+        });
+      }
+
       return res.status(401).json({
         status: "failure",
         message: "Invalid Password",
-        details: "The password you entered is incorrect.",
+        details: "The password you entered is incorrect. You have " + (MAX_ATTEMPTS - loginAttempts[email].count) + " attempts left before your account is locked.",
       });
+    } else {
+      // Resetting lockout time if the password is valid
+      if (loginAttempts[email]) {
+        delete loginAttempts[email]
+      }
+      user.lockOutTimeExpiry = null; // Resetting lockout time
+      if (!user.isActive) {
+        user.isActive = true; // Ensuring user is active
+      }
+      await user.save();
     }
 
     // If everything is valid, create a JWT token
